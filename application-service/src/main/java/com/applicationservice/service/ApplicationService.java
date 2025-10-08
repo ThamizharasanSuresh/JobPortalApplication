@@ -52,8 +52,8 @@ public class ApplicationService {
         }
 
         Application app = Application.builder()
-                .applicant(Applicant.builder().id(applicant.getId()).build())
-                .job(Job.builder().id(job.getId()).build())
+                .applicant(Applicant.builder().id(applicant.getId()).firstName(applicant.getFirstName()).build())
+                .job(Job.builder().id(job.getId()).title(job.getTitle()).build())
                 .status("Applied")
                 .appliedAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())

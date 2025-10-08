@@ -49,4 +49,24 @@ public class JobController {
         dto.setCompanyname(j.getCompany().getName());
         return dto;
     }
+
+    @GetMapping("/search")
+    public List<JobResponse> searchJobs(@RequestParam("keyword") String keyword) {
+        return jobService.searchJobs(keyword);
+    }
+
+    @GetMapping("/filter/location")
+    public List<JobResponse> filterByLocation(@RequestParam("location") String location) {
+        return jobService.filterByLocation(location);
+    }
+
+    @GetMapping("/filter/employment-type")
+    public List<JobResponse> filterByEmploymentType(@RequestParam("type") String type) {
+        return jobService.filterByEmploymentType(type);
+    }
+
+    @GetMapping("/filter/company")
+    public List<JobResponse> filterByCompany(@RequestParam("company") String company) {
+        return jobService.filterByCompanyName(company);
+    }
 }

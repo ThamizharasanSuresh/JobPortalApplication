@@ -40,11 +40,44 @@ public class JobService {
         return jobRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
     }
 
-    private JobResponse toResponse(Job job) {
-        return new JobResponse(job.getId(), job.getTitle(), job.getDescription(), job.getLocation(),
-                job.getEmploymentType(), job.getSalary(), job.getSkills(),
-                job.getCompany() != null ? job.getCompany().getName() : null);
+    public List<JobResponse> searchJobs(String keyword) {
+        return jobRepository.searchJobs(keyword)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<JobResponse> filterByEmploymentType(String employmentType) {
+        return jobRepository.findByEmploymentTypeIgnoreCase(employmentType)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<JobResponse> filterByLocation(String location) {
+        return jobRepository.findByLocationIgnoreCase(location)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<JobResponse> filterByCompanyName(String companyName) {
+        return jobRepository.findByCompanyName(companyName)
+                .stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
     }
 
 
+    private JobResponse toResponse(Job job) {
+        return new JobResponse(
+                job.getId(),
+                job.getTitle(),
+                job.getDescription(),
+                job.getLocation(),
+                job.getEmploymentType(),
+                job.getSalary(),
+                job.getSkills(),
+                job.getCompany() != null ? job.getCompany().getName() : null);
+    }
 }
