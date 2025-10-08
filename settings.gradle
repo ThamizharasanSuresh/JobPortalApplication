@@ -1,0 +1,8 @@
+rootProject.name = 'Job-Portal-Application'
+
+include(":share-persistence", "auth-service", "company-service", "job-service")
+
+
+include 'job-service'
+include 'applicant-service'
+include 'application-service'
