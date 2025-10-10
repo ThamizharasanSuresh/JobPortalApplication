@@ -8,11 +8,17 @@ import com.jobservice.service.JobService;
 import com.sharepersistence.dto.JobDTO;
 import com.sharepersistence.entity.Job;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/jobs")
@@ -20,15 +26,22 @@ import java.util.Optional;
 public class JobController {
     private final JobService jobService;
     private final JobRepository jobRepository;
+    private final JobModelAssembler assembler;
 
     @PostMapping
-    public JobResponse createJob(@RequestBody JobRequest req) {
-        return jobService.createJob(req.getCompanyId(), req);
+    public EntityModel<JobResponse> createJob(@RequestBody JobRequest req) {
+        JobResponse response = jobService.createJob(req.getCompanyId(), req);
+        return assembler.toModel(response);
     }
 
     @GetMapping
-    public List<JobResponse> getAll() {
-        return jobService.getAllJobs();
+    public CollectionModel<EntityModel<JobResponse>> getAll() {
+        List<EntityModel<JobResponse>> jobs = jobService.getAllJobs()
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(jobs, linkTo(methodOn(JobController.class).getAll()).withSelfRel());
     }
 
     @GetMapping("/{id}")
@@ -51,22 +64,42 @@ public class JobController {
     }
 
     @GetMapping("/search")
-    public List<JobResponse> searchJobs(@RequestParam("keyword") String keyword) {
-        return jobService.searchJobs(keyword);
+    public CollectionModel<EntityModel<JobResponse>> searchJobs(@RequestParam("keyword") String keyword) {
+        List<EntityModel<JobResponse>> jobs = jobService.searchJobs(keyword)
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(jobs, linkTo(methodOn(JobController.class).searchJobs(keyword)).withSelfRel());
     }
 
     @GetMapping("/filter/location")
-    public List<JobResponse> filterByLocation(@RequestParam("location") String location) {
-        return jobService.filterByLocation(location);
+    public CollectionModel<EntityModel<JobResponse>> filterByLocation(@RequestParam("location") String location) {
+        List<EntityModel<JobResponse>> jobs = jobService.filterByLocation(location)
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(jobs, linkTo(methodOn(JobController.class).filterByLocation(location)).withSelfRel());
     }
 
     @GetMapping("/filter/employment-type")
-    public List<JobResponse> filterByEmploymentType(@RequestParam("type") String type) {
-        return jobService.filterByEmploymentType(type);
+    public CollectionModel<EntityModel<JobResponse>> filterByEmploymentType(@RequestParam("type") String type) {
+        List<EntityModel<JobResponse>> jobs = jobService.filterByEmploymentType(type)
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(jobs, linkTo(methodOn(JobController.class).filterByEmploymentType(type)).withSelfRel());
     }
 
     @GetMapping("/filter/company")
-    public List<JobResponse> filterByCompany(@RequestParam("company") String company) {
-        return jobService.filterByCompanyName(company);
+    public CollectionModel<EntityModel<JobResponse>> filterByCompany(@RequestParam("company") String company) {
+        List<EntityModel<JobResponse>> jobs = jobService.filterByCompanyName(company)
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(jobs, linkTo(methodOn(JobController.class).filterByCompany(company)).withSelfRel());
     }
 }

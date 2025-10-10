@@ -29,7 +29,7 @@ public class ApplicationService {
     private final JobFeignClient jobFeignClient;
 
     public ApplicationResponse apply(ApplicationRequest req) {
-        // Validate Applicant via applicant-service
+
         ApplicantDTO applicant = null;
         try {
             applicant = applicantFeignClient.getApplicantById(req.getApplicantId());

@@ -18,7 +18,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -56,7 +58,7 @@ public class ApplicantService {
     public ResumeResponse uploadResumeFile(Long applicantId, MultipartFile file) throws IOException {
         Applicant applicant = applicantRepository.findById(applicantId)
                 .orElseThrow(() -> new RuntimeException("Applicant not found"));
-        // Save file to server folder
+
         String folder = "uploads/";
         Path path = Paths.get(folder + file.getOriginalFilename());
         Files.createDirectories(path.getParent());
@@ -83,7 +85,8 @@ public class ApplicantService {
 
 
     private ApplicantResponse toResponse(Applicant a) {
-        List<ResumeResponse> resumeList = a.getResumes().stream()
+        List<ResumeResponse> resumeList = Optional.ofNullable(a.getResumes())
+                .orElse(Collections.emptyList()).stream()
                 .map(r -> new ResumeResponse(
                         r.getId(),
                         r.getFileName(),
@@ -104,7 +107,7 @@ public class ApplicantService {
                 a.getEducation(),
                 a.getExperience(),
                 a.getUser() != null ? a.getUser().getId() : null,
-                resumeList
+                resumeList != null ? resumeList : null
         );
     }
 }

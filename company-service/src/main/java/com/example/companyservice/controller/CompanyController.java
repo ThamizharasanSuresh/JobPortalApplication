@@ -7,31 +7,43 @@ import com.example.companyservice.repository.CompanyRepository;
 import com.example.companyservice.service.CompanyService;
 import com.sharepersistence.entity.Company;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
 public class CompanyController {
     private final CompanyService companyService;
-    private final CompanyRepository companyRepository;
+    private final CompanyModelAssembler assembler;
 
     @PostMapping("/{userId}")
-    public CompanyResponse createCompany(@PathVariable Long userId, @RequestBody CompanyRequest req) {
-        return companyService.createCompany(userId,req);
+    public EntityModel<CompanyResponse> createCompany(@PathVariable Long userId, @RequestBody CompanyRequest req) {
+        CompanyResponse response = companyService.createCompany(userId, req);
+        return assembler.toModel(response);
     }
 
     @GetMapping("/all")
-    public List<CompanyResponse> getAll() {
-        return companyService.getAllCompanies();
+    public CollectionModel<EntityModel<CompanyResponse>> getAll() {
+        List<EntityModel<CompanyResponse>> companies = companyService.getAllCompanies()
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+        return CollectionModel.of(companies,
+                linkTo(methodOn(CompanyController.class).getAll()).withSelfRel());
     }
 
     @GetMapping("/{id}")
-    public CompanyResponse getCompany(@PathVariable Long id) {
-        Company company = companyRepository.findById(Math.toIntExact(id)).orElseThrow(() -> new RuntimeException("Company not found"));
-        return companyService.toResponse(company);
+    public EntityModel<CompanyResponse> getCompany(@PathVariable Long id) {
+        CompanyResponse response = companyService.getcompanybyId(id);
+        return assembler.toModel(response);
     }
 
 }

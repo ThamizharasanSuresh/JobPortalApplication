@@ -19,5 +19,5 @@ public class CompanyResponse {
     private String location;
     private String website;
     private String logoUrl;
-    private User user; // full user details
+    private User user;
 }

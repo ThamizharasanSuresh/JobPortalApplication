@@ -13,5 +13,5 @@ public class ResumeResponse {
     private String skills;
     private String education;
     private String experience;
-    private Long applicantId; // just reference the applicant ID
+    private Long applicantId;
 }

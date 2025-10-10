@@ -25,6 +25,6 @@ public interface JobRepository extends JpaRepository<Job,Long> {
     List<Job> findByLocationIgnoreCase(String location);
 
 
-    @Query("SELECT j FROM Job j WHERE LOWER(j.company.name) LIKE LOWER(CONCAT('%', :companyName, '%'))")
+    @Query("SELECT j FROM Job j WHERE LOWER(j.company.name) LIKE LOWER(CONCAT(:companyName, '%'))")
     List<Job> findByCompanyName(@Param("companyName") String companyName);
 }

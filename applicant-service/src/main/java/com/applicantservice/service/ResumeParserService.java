@@ -17,7 +17,7 @@ public class ResumeParserService {
     public Resume parseResume(Resume resume) {
         try {
             File file = new File(resume.getFilePath());
-            String content = tika.parseToString(file); // Extract text from file
+            String content = tika.parseToString(file);
 
             resume.setSkills(extractSkills(content));
             resume.setEducation(extractEducation(content));

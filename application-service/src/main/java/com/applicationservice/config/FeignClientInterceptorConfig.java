@@ -24,7 +24,7 @@ public class FeignClientInterceptorConfig {
         this.messageConverters = messageConverters;
     }
 
-    // Use Spring's HttpMessageConverters -> mapping jackson is available
+
     @Bean
     public Decoder feignDecoder() {
         return new ResponseEntityDecoder(new SpringDecoder(messageConverters));
@@ -35,7 +35,6 @@ public class FeignClientInterceptorConfig {
         return new SpringEncoder(messageConverters);
     }
 
-    // Optional: forward Authorization header from incoming request to outgoing Feign calls
     @Bean
     public RequestInterceptor requestInterceptor() {
         return template -> {

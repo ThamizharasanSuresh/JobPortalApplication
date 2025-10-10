@@ -17,7 +17,7 @@ public class JwtUtil {
     @Value("${jwt.secret}")
     private String secret;
 
-    private final long EXPIRATION = 86400000; // 1 day
+    private final long EXPIRATION = 86400000;
 
     public boolean validateToken(String token) {
         try {

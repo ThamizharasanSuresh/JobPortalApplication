@@ -15,5 +15,5 @@ public class ApplicantResponse {
     private String education;
     private String experience;
     private Long userId;
-    private List<ResumeResponse> resumes; // list of resumes for this applicant
+    private List<ResumeResponse> resumes;
 }

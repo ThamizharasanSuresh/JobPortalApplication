@@ -1,5 +1,6 @@
 package com.applicantservice.controller;
 
+import com.applicantservice.assembler.ApplicantModelAssembler;
 import com.applicantservice.dto.ApplicantRequest;
 import com.applicantservice.dto.ApplicantResponse;
 import com.applicantservice.dto.ResumeResponse;
@@ -8,6 +9,8 @@ import com.applicantservice.service.ApplicantService;
 import com.sharepersistence.dto.ApplicantDTO;
 import com.sharepersistence.entity.Applicant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -15,6 +18,10 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/applicants")
@@ -23,15 +30,23 @@ public class ApplicantController {
 
     private final ApplicantService applicantService;
     private final ApplicantRepository applicantRepository;
+    private final ApplicantModelAssembler assembler;
 
     @PostMapping
-    public ApplicantResponse createApplicant(@RequestBody ApplicantRequest req) {
-        return applicantService.createApplicant(req);
+    public EntityModel<ApplicantResponse> createApplicant(@RequestBody ApplicantRequest req) {
+        ApplicantResponse response = applicantService.createApplicant(req);
+        return assembler.toModel(response);
     }
 
     @GetMapping
-    public List<ApplicantResponse> getAll() {
-        return applicantService.getAllApplicants();
+    public CollectionModel<EntityModel<ApplicantResponse>> getAll() {
+        List<EntityModel<ApplicantResponse>> applicants = applicantService.getAllApplicants()
+                .stream()
+                .map(assembler::toModel)
+                .collect(Collectors.toList());
+
+        return CollectionModel.of(applicants,
+                linkTo(methodOn(ApplicantController.class).getAll()).withSelfRel());
     }
 
     // Upload resume file
@@ -58,7 +73,5 @@ public class ApplicantController {
         dto.setExperience(a.getExperience());
         return dto;
     }
-
-
 }
 
