@@ -16,7 +16,7 @@ public class JobModelAssembler implements RepresentationModelAssembler<JobRespon
     public EntityModel<JobResponse> toModel(JobResponse jobResponse) {
         return EntityModel.of(jobResponse,
                 linkTo(methodOn(JobController.class).getJobById(jobResponse.getId())).withSelfRel(),
-                linkTo(methodOn(JobController.class).getAll()).withRel("all-jobs"),
+                linkTo(methodOn(JobController.class).getAllJobs()).withRel("all-jobs"),
                 linkTo(methodOn(JobController.class).filterByCompany(jobResponse.getCompanyName())).withRel("company-jobs"),
                 linkTo(methodOn(JobController.class).filterByLocation(jobResponse.getLocation())).withRel("jobs-by-location")
         );

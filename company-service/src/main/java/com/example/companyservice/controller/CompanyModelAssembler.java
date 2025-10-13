@@ -16,6 +16,6 @@ public class CompanyModelAssembler implements RepresentationModelAssembler<Compa
     public EntityModel<CompanyResponse> toModel(CompanyResponse company) {
         return EntityModel.of(company,
                 linkTo(methodOn(CompanyController.class).getCompany(company.getId())).withSelfRel(),
-                linkTo(methodOn(CompanyController.class).getAll()).withRel("companies"));
+                linkTo(methodOn(CompanyController.class).getAllCompanies()).withRel("companies"));
     }
 }

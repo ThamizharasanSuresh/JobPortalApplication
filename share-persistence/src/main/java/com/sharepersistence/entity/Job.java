@@ -23,6 +23,7 @@ public class Job {
     private String employmentType; // Full-time, Part-time, etc.
     private Double salary;
     private String skills; // comma-separated or List<String> if using ElementCollection
+    private String experience;
 
     @ManyToOne
     private Company company; // Link to company

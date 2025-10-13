@@ -1,20 +1,20 @@
 package com.applicationservice.service;
 
-
 import com.applicationservice.dto.ApplicationRequest;
 import com.applicationservice.dto.ApplicationResponse;
 import com.applicationservice.feign.ApplicantFeignClient;
+import com.applicationservice.feign.AuthFeignClient;
 import com.applicationservice.feign.JobFeignClient;
 import com.applicationservice.repository.ApplicationRepository;
-
+import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.dto.ApplicantDTO;
-import com.sharepersistence.dto.JobDTO;
-import com.sharepersistence.entity.Applicant;
-import com.sharepersistence.entity.Application;
-import com.sharepersistence.entity.Job;
-import feign.FeignException;
+import com.sharepersistence.dto.JobDTORequest;
+import com.sharepersistence.entity.*;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import feign.FeignException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,41 +27,44 @@ public class ApplicationService {
     private final ApplicationRepository applicationRepository;
     private final ApplicantFeignClient applicantFeignClient;
     private final JobFeignClient jobFeignClient;
+    private final AuthFeignClient authFeignClient;
+    private final JavaMailSender mailSender;
 
     public ApplicationResponse apply(ApplicationRequest req) {
+        ApiResponse<ApplicantDTO> applicant;
+        ApiResponse<JobDTORequest> job;
 
-        ApplicantDTO applicant = null;
         try {
             applicant = applicantFeignClient.getApplicantById(req.getApplicantId());
         } catch (FeignException e) {
-            System.out.println(e.getMessage());
-        }
-
-        if (applicant == null || applicant.getId() == null) {
             throw new RuntimeException("Applicant not found");
         }
 
-        JobDTO job = null;
         try {
             job = jobFeignClient.getJobById(req.getJobId());
         } catch (FeignException e) {
-            System.out.println(e.getMessage());
-        }
-        if (job == null || job.getId() == null) {
             throw new RuntimeException("Job not found");
         }
 
-        Application app = Application.builder()
-                .applicant(Applicant.builder().id(applicant.getId()).firstName(applicant.getFirstName()).build())
-                .job(Job.builder().id(job.getId()).title(job.getTitle()).build())
+
+        Application application = Application.builder()
+                .applicant(Applicant.builder().id(applicant.getData().getId()).firstName(applicant.getData().getFirstName()).build())
+                .job(Job.builder().id(job.getData().getId()).title(job.getData().getTitle()).company(Company.builder().id(job.getData().getCompanyId()).build()).build())
                 .status("Applied")
                 .appliedAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        applicationRepository.save(app);
-        return toResponse(app);
+        Long userId = job.getData().getUserId();
+        ApiResponse<User> user = authFeignClient.getUserById(userId);
+
+        applicationRepository.save(application);
+
+        sendEmailToCompany(user.getData().getEmail(), applicant.getData().getFirstName(), job.getData().getTitle());
+
+        return toResponse(application);
     }
+
 
     public List<ApplicationResponse> getByApplicant(Long applicantId) {
         return applicationRepository.findByApplicantId(applicantId)
@@ -72,6 +75,14 @@ public class ApplicationService {
         return applicationRepository.findByJobId(jobId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
     }
+
+
+    public void deleteApplication(Long applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+                .orElseThrow(() -> new RuntimeException("Application not found"));
+        applicationRepository.delete(app);
+    }
+
 
     private ApplicationResponse toResponse(Application app) {
         return new ApplicationResponse(
@@ -84,5 +95,20 @@ public class ApplicationService {
                 app.getAppliedAt(),
                 app.getUpdatedAt()
         );
+    }
+
+    private void sendEmailToCompany(String companyEmail, String applicantName, String jobTitle) {
+        if (companyEmail == null || companyEmail.isEmpty()) {
+            System.out.println("companyEmail is null or empty");
+            return;
+        }
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setTo(companyEmail);
+        message.setSubject("New Job Application: " + jobTitle);
+        message.setText("Applicant " + applicantName + " has applied for the job: " + jobTitle);
+        message.setFrom(applicantName);
+        mailSender.send(message);
+        System.out.println("Mail sent to " + companyEmail);
     }
 }

@@ -1,49 +1,79 @@
 package com.example.companyservice.controller;
 
-
+import com.example.companyservice.dto.AllCompanyResponse;
 import com.example.companyservice.dto.CompanyRequest;
 import com.example.companyservice.dto.CompanyResponse;
 import com.example.companyservice.repository.CompanyRepository;
 import com.example.companyservice.service.CompanyService;
-import com.sharepersistence.entity.Company;
+import com.sharepersistence.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/companies")
 @RequiredArgsConstructor
 public class CompanyController {
+
     private final CompanyService companyService;
-    private final CompanyModelAssembler assembler;
+    private final CompanyRepository companyRepository;
 
     @PostMapping("/{userId}")
-    public EntityModel<CompanyResponse> createCompany(@PathVariable Long userId, @RequestBody CompanyRequest req) {
-        CompanyResponse response = companyService.createCompany(userId, req);
-        return assembler.toModel(response);
+    public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(
+            @PathVariable Long userId,
+            @RequestBody CompanyRequest req) {
+
+        try {
+            CompanyResponse response = companyService.createCompany(userId, req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Company created successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
     @GetMapping("/all")
-    public CollectionModel<EntityModel<CompanyResponse>> getAll() {
-        List<EntityModel<CompanyResponse>> companies = companyService.getAllCompanies()
-                .stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
-        return CollectionModel.of(companies,
-                linkTo(methodOn(CompanyController.class).getAll()).withSelfRel());
+    public ResponseEntity<ApiResponse<List<AllCompanyResponse>>> getAllCompanies() {
+        List<AllCompanyResponse> companies = companyService.getAllCompanies();
+        return ResponseEntity.ok(new ApiResponse<>(true, "Companies fetched successfully", companies));
     }
+
 
     @GetMapping("/{id}")
-    public EntityModel<CompanyResponse> getCompany(@PathVariable Long id) {
-        CompanyResponse response = companyService.getcompanybyId(id);
-        return assembler.toModel(response);
+    public ResponseEntity<ApiResponse<CompanyResponse>> getCompany(@PathVariable Long id) {
+        try {
+            CompanyResponse response = companyService.getCompanyById(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Company found", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<AllCompanyResponse>> updateCompany(
+            @PathVariable Long id,
+            @RequestBody CompanyRequest req) {
+
+        try {
+            AllCompanyResponse response = companyService.updateCompany(id, req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Company updated successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteCompany(@PathVariable Long id) {
+        try {
+            companyService.deleteCompany(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Company deleted successfully", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
 }

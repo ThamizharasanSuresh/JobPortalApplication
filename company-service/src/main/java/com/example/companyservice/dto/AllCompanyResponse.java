@@ -1,27 +1,22 @@
-package com.sharepersistence.entity;
+package com.example.companyservice.dto;
 
-import jakarta.persistence.*;
+
+
+
+import com.sharepersistence.entity.User;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@Entity
-public class Company {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class AllCompanyResponse {
     private Long id;
-
     private String name;
     private String description;
     private String industry;
     private String location;
     private String website;
     private String logoUrl;
-
-    private Long userId;// Link to Auth Service user
 }

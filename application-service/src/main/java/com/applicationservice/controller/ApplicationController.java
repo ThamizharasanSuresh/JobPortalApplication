@@ -1,55 +1,59 @@
 package com.applicationservice.controller;
 
-
 import com.applicationservice.dto.ApplicationRequest;
 import com.applicationservice.dto.ApplicationResponse;
 import com.applicationservice.service.ApplicationService;
+import com.sharepersistence.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/applications")
 @RequiredArgsConstructor
 public class ApplicationController {
+
     private final ApplicationService applicationService;
-    private final ApplicationModelAssembler assembler;
 
     @PostMapping
-    public EntityModel<ApplicationResponse> apply(@RequestBody ApplicationRequest req) {
-        ApplicationResponse response = applicationService.apply(req);
-        return assembler.toModel(response);
+    public ResponseEntity<ApiResponse<?>> apply(@RequestBody ApplicationRequest req) {
+        try {
+            ApplicationResponse response = applicationService.apply(req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Application submitted successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
-    @GetMapping(value = "/applicant/{id}")
-    public CollectionModel<EntityModel<ApplicationResponse>> getByApplicant(@PathVariable Long id) {
-        List<EntityModel<ApplicationResponse>> applications = applicationService.getByApplicant(id)
-                .stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
-
-        return CollectionModel.of(applications,
-                linkTo(methodOn(ApplicationController.class).getByApplicant(id)).withSelfRel(),
-                linkTo(methodOn(ApplicationController.class).apply(null)).withRel("apply"));
+    @GetMapping("/applicant/{id}")
+    public ResponseEntity<ApiResponse<?>> getByApplicant(@PathVariable Long id) {
+        try {
+            List<ApplicationResponse> responses = applicationService.getByApplicant(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applications fetched for applicant", responses));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
-    @GetMapping(value = "/job/{id}")
-    public CollectionModel<EntityModel<ApplicationResponse>> getByJob(@PathVariable Long id) {
-        List<EntityModel<ApplicationResponse>> applications = applicationService.getByJob(id)
-                .stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
+    @GetMapping("/job/{id}")
+    public ResponseEntity<ApiResponse<?>> getByJob(@PathVariable Long id) {
+        try {
+            List<ApplicationResponse> responses = applicationService.getByJob(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applications fetched for job", responses));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
 
-        return CollectionModel.of(applications,
-                linkTo(methodOn(ApplicationController.class).getByJob(id)).withSelfRel(),
-                linkTo(methodOn(ApplicationController.class).apply(null)).withRel("apply"));
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteApplication(@PathVariable Long id) {
+        try {
+            applicationService.deleteApplication(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Application deleted successfully", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 }

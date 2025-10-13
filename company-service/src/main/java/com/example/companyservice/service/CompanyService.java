@@ -1,11 +1,11 @@
 package com.example.companyservice.service;
 
-
-
 import com.example.companyservice.AuthFeignClient;
+import com.example.companyservice.dto.AllCompanyResponse;
 import com.example.companyservice.dto.CompanyRequest;
 import com.example.companyservice.dto.CompanyResponse;
 import com.example.companyservice.repository.CompanyRepository;
+import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.entity.Company;
 import com.sharepersistence.entity.User;
 import lombok.RequiredArgsConstructor;
@@ -17,10 +17,31 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class CompanyService {
+
     private final CompanyRepository companyRepository;
     private final AuthFeignClient authFeignClient;
 
-    public CompanyResponse createCompany(Long Id, CompanyRequest req) {
+
+    public CompanyResponse createCompany(Long userId, CompanyRequest req) {
+        ApiResponse<User> authResponse = null;
+        try {
+            authResponse = authFeignClient.getUserById(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to fetch user from Auth Service: " + e.getMessage());
+        }
+
+        if (authResponse == null || !authResponse.isSuccess() || authResponse.getData() == null) {
+            throw new RuntimeException("User ID " + userId + " does not exist");
+        }
+
+        if (companyRepository.existsByName(req.getName())) {
+            throw new RuntimeException("Company name already exists");
+        }
+
+        if (companyRepository.existsByUserId(userId)) {
+            throw new RuntimeException("This user already has a registered company");
+        }
+
         Company company = new Company();
         company.setName(req.getName());
         company.setDescription(req.getDescription());
@@ -28,27 +49,85 @@ public class CompanyService {
         company.setLocation(req.getLocation());
         company.setWebsite(req.getWebsite());
         company.setLogoUrl(req.getLogoUrl());
-        company.setUserId(Id);
+        company.setUserId(userId);
+
         companyRepository.save(company);
+
         return toResponse(company);
     }
 
-    public CompanyResponse getcompanybyId(Long Id){
-        Company com = companyRepository.findById(Math.toIntExact(Id)).orElseThrow(()->new RuntimeException("Company Not Found"));
-        return toResponse(com);
+
+    public List<AllCompanyResponse> getAllCompanies() {
+        return companyRepository.findAll()
+                .stream()
+                .map(company -> new AllCompanyResponse(
+                        company.getId(),
+                        company.getName(),
+                        company.getDescription(),
+                        company.getIndustry(),
+                        company.getLocation(),
+                        company.getWebsite(),
+                        company.getLogoUrl()
+                ))
+                .collect(Collectors.toList());
     }
-    public List<CompanyResponse> getAllCompanies() {
-        return companyRepository.findAll().stream().map(this::toResponse).collect(Collectors.toList());
+
+
+    public CompanyResponse getCompanyById(Long id) {
+        Company company = companyRepository.findById(Math.toIntExact(id))
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        return toResponse(company);
+    }
+
+
+    public AllCompanyResponse updateCompany(Long id, CompanyRequest req) {
+        Company company = companyRepository.findById(Math.toIntExact(id))
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+
+        if (!company.getName().equals(req.getName()) && companyRepository.existsByName(req.getName())) {
+            throw new RuntimeException("Company name already exists");
+        }
+
+        company.setName(req.getName());
+        company.setDescription(req.getDescription());
+        company.setIndustry(req.getIndustry());
+        company.setLocation(req.getLocation());
+        company.setWebsite(req.getWebsite());
+        company.setLogoUrl(req.getLogoUrl());
+
+        companyRepository.save(company);
+
+        return new AllCompanyResponse(
+                company.getId(),
+                company.getName(),
+                company.getDescription(),
+                company.getIndustry(),
+                company.getLocation(),
+                company.getWebsite(),
+                company.getLogoUrl()
+        );
+    }
+
+
+    public void deleteCompany(Long id) {
+        Company company = companyRepository.findById(Math.toIntExact(id))
+                .orElseThrow(() -> new RuntimeException("Company not found"));
+        companyRepository.delete(company);
     }
 
     public CompanyResponse toResponse(Company c) {
         User user = null;
+
         if (c.getUserId() != null) {
             try {
-                user = authFeignClient.getUserById(c.getUserId());
+                ApiResponse<User> userResponse = authFeignClient.getUserById(c.getUserId());
+                if (userResponse != null && userResponse.isSuccess()) {
+                    user = userResponse.getData();
+                } else {
+                    System.out.println("Warning: User not found for ID: " + c.getUserId());
+                }
             } catch (Exception e) {
-                // Log warning and proceed
-                System.out.println("User not found for ID: " + c.getUserId());
+                System.out.println("Warning: Error fetching user for company " + c.getId() + ": " + e.getMessage());
             }
         }
 
@@ -63,5 +142,4 @@ public class CompanyService {
                 user
         );
     }
-
 }

@@ -22,7 +22,7 @@ public class AuthService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    public AuthResponse register(RegisterRequest request) {
+    public User register(RegisterRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new RuntimeException("Email already registered");
         }
@@ -36,8 +36,7 @@ public class AuthService {
 
         userRepository.save(user);
 
-        String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
-        return new AuthResponse(token);
+        return user;
     }
 
     public AuthResponse login(LoginRequest request) {
@@ -45,12 +44,11 @@ public class AuthService {
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new RuntimeException("Invalid Password!!");
         }
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
-        return new AuthResponse(token);
+        Long userId = user.getId();
+        return new AuthResponse(userId,token);
     }
-
-
 }

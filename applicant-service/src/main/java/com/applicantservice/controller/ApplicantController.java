@@ -1,27 +1,18 @@
 package com.applicantservice.controller;
 
 import com.applicantservice.assembler.ApplicantModelAssembler;
-import com.applicantservice.dto.ApplicantRequest;
-import com.applicantservice.dto.ApplicantResponse;
-import com.applicantservice.dto.ResumeResponse;
+import com.applicantservice.dto.*;
 import com.applicantservice.repository.ApplicantRepository;
 import com.applicantservice.service.ApplicantService;
-import com.sharepersistence.dto.ApplicantDTO;
+import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.entity.Applicant;
 import lombok.RequiredArgsConstructor;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
-import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
-import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/applicants")
@@ -33,45 +24,70 @@ public class ApplicantController {
     private final ApplicantModelAssembler assembler;
 
     @PostMapping
-    public EntityModel<ApplicantResponse> createApplicant(@RequestBody ApplicantRequest req) {
-        ApplicantResponse response = applicantService.createApplicant(req);
-        return assembler.toModel(response);
+    public ResponseEntity<ApiResponse<?>> createApplicant(@RequestBody ApplicantRequest req) {
+        try {
+            ApplicantResponse response = applicantService.createApplicant(req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant created successfully", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 
     @GetMapping
-    public CollectionModel<EntityModel<ApplicantResponse>> getAll() {
-        List<EntityModel<ApplicantResponse>> applicants = applicantService.getAllApplicants()
-                .stream()
-                .map(assembler::toModel)
-                .collect(Collectors.toList());
-
-        return CollectionModel.of(applicants,
-                linkTo(methodOn(ApplicantController.class).getAll()).withSelfRel());
-    }
-
-    // Upload resume file
-    @PostMapping("/{id}/resume/upload")
-    public ResumeResponse uploadResumeFile(@PathVariable Long id,
-                                           @RequestParam("file") MultipartFile file) throws IOException {
-        return applicantService.uploadResumeFile(id, file);
+    public ResponseEntity<ApiResponse<?>> getAllApplicants() {
+        List<ApplicantResponse> applicants = applicantService.getAllApplicants();
+        return ResponseEntity.ok(new ApiResponse<>(true, "All applicants fetched successfully", applicants));
     }
 
     @GetMapping("/{id}")
-    public ApplicantDTO getApplicantById(@PathVariable Long id) {
-        Optional<Applicant> applicant = applicantRepository.findById(id);
-        if (applicant.isEmpty()) {
-            return null;
+    public ResponseEntity<ApiResponse<?>> getApplicantById(@PathVariable Long id) {
+        try {
+            Applicant response = applicantRepository.findById(id).orElseThrow(()->new RuntimeException("Applicant with id " + id + " not found"));
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant found", response));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }
-        Applicant a = applicant.get();
-        ApplicantDTO dto = new ApplicantDTO();
-        dto.setId(a.getId());
-        dto.setFirstName(a.getFirstName());
-        dto.setLastName(a.getLastName());
-        dto.setEmail(a.getEmail());
-        dto.setPhone(a.getPhone());
-        dto.setEducation(a.getEducation());
-        dto.setExperience(a.getExperience());
-        return dto;
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> updateApplicant(@PathVariable Long id, @RequestBody ApplicantRequest req) {
+        try {
+            ApplicantResponse updated = applicantService.updateApplicant(id, req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant updated successfully", updated));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<?>> deleteApplicant(@PathVariable Long id) {
+        try {
+            applicantService.deleteApplicant(id);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant deleted successfully", null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @PostMapping("/{id}/resume/upload")
+    public ResponseEntity<ApiResponse<?>> uploadResume(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        try {
+            ResumeResponse response = applicantService.uploadOrReplaceResume(id, file);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Resume uploaded successfully", response));
+        } catch (IOException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, "File upload error: " + e.getMessage(), null));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
+    }
+
+    @PutMapping("/{id}/resume/update")
+    public ResponseEntity<ApiResponse<?>> updateResume(@PathVariable Long id, @RequestBody ResumeUpdateRequest req) {
+        try {
+            ResumeResponse updated = applicantService.updateResumeDetails(id, req);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Resume updated successfully", updated));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
+        }
     }
 }
-

@@ -18,11 +18,11 @@ public class ApplicantModelAssembler implements RepresentationModelAssembler<App
                 .getApplicantById(applicantResponse.getId()))
                 .withSelfRel());
         model.add(linkTo(methodOn(ApplicantController.class)
-                .getAll())
+                .getAllApplicants())
                 .withRel("all-applicants"));
         try {
             model.add(linkTo(methodOn(ApplicantController.class)
-                    .uploadResumeFile(applicantResponse.getId(), null))
+                    .uploadResume(applicantResponse.getId(), null))
                     .withRel("upload-resume"));
         } catch (Exception e) {
             System.out.println(e.getMessage());

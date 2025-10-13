@@ -14,6 +14,9 @@ public class JobResponse {
     private String employmentType;
     private Double salary;
     private String skills;
+    private String experience;
+    private Long companyId;
     private String companyName;
+    private Long userId;
 }
 

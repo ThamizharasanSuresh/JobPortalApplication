@@ -2,6 +2,7 @@ package com.applicationservice.feign;
 
 import com.applicationservice.config.FeignClientInterceptorConfig;
 
+import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.dto.ApplicantDTO;
 import com.sharepersistence.entity.Applicant;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -16,5 +17,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface ApplicantFeignClient {
     @GetMapping(value = "/{id}")
-    ApplicantDTO getApplicantById(@PathVariable("id") Long id);
+    ApiResponse<ApplicantDTO> getApplicantById(@PathVariable("id") Long id);
 }

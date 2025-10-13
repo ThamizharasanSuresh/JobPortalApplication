@@ -1,6 +1,5 @@
-package com.example.companyservice;
+package com.applicationservice.feign;
 
-import com.example.companyservice.dto.AuthUserResponse;
 import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.entity.User;
 import org.springframework.cloud.openfeign.FeignClient;

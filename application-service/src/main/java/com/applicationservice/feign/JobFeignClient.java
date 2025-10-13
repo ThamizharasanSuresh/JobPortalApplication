@@ -3,10 +3,9 @@ package com.applicationservice.feign;
 
 
 import com.applicationservice.config.FeignClientInterceptorConfig;
-import com.sharepersistence.dto.JobDTO;
-import com.sharepersistence.entity.Job;
+import com.sharepersistence.dto.ApiResponse;
+import com.sharepersistence.dto.JobDTORequest;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
@@ -17,5 +16,5 @@ import org.springframework.web.bind.annotation.PathVariable;
 )
 public interface JobFeignClient {
     @GetMapping(value = "/{id}")
-    JobDTO getJobById(@PathVariable("id") Long id);
+    ApiResponse<JobDTORequest> getJobById(@PathVariable("id") Long id);
 }

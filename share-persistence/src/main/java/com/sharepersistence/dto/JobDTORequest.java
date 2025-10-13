@@ -1,10 +1,13 @@
 package com.sharepersistence.dto;
 
-
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class JobDTO {
+@AllArgsConstructor
+@NoArgsConstructor
+public class JobDTORequest {
     private Long id;
     private String title;
     private String description;
@@ -12,5 +15,8 @@ public class JobDTO {
     private String employmentType;
     private Double salary;
     private String skills;
-    private String companyname;
+    private String experience;
+    private Long companyId;
+    private String companyName;
+    private Long userId;
 }
