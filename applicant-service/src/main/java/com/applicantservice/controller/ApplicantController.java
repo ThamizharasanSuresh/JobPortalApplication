@@ -1,12 +1,13 @@
 package com.applicantservice.controller;
 
-import com.applicantservice.assembler.ApplicantModelAssembler;
+
 import com.applicantservice.dto.*;
 import com.applicantservice.repository.ApplicantRepository;
 import com.applicantservice.service.ApplicantService;
 import com.sharepersistence.dto.ApiResponse;
 import com.sharepersistence.entity.Applicant;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,7 +28,8 @@ public class ApplicantController {
     public ResponseEntity<ApiResponse<?>> createApplicant(@RequestBody ApplicantRequest req) {
         try {
             ApplicantResponse response = applicantService.createApplicant(req);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant created successfully", response));
+            EntityModel<ApplicantResponse> entityModel = assembler.toModel(response);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Applicant created Profile successfully", entityModel));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }

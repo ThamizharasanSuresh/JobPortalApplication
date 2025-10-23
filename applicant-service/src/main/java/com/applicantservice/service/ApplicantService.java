@@ -146,10 +146,6 @@ public class ApplicantService {
         );
     }
 
-
-
-
-
     public ApplicantResponse toResponse(Applicant a) {
         List<ResumeResponse> resumeList = Optional.ofNullable(a.getResumes())
                 .orElse(Collections.emptyList())

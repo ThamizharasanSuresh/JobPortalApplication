@@ -1,6 +1,6 @@
-package com.applicantservice.assembler;
+package com.applicantservice.controller;
 
-import com.applicantservice.controller.ApplicantController;
+
 import com.applicantservice.dto.ApplicantResponse;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;

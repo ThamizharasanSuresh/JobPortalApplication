@@ -1,5 +1,6 @@
 package com.applicationservice.service;
 
+import com.applicationservice.Kafka.ProducerService;
 import com.applicationservice.dto.ApplicationRequest;
 import com.applicationservice.dto.ApplicationResponse;
 import com.applicationservice.feign.ApplicantFeignClient;
@@ -29,6 +30,7 @@ public class ApplicationService {
     private final JobFeignClient jobFeignClient;
     private final AuthFeignClient authFeignClient;
     private final JavaMailSender mailSender;
+    private final ProducerService producerService;
 
     public ApplicationResponse apply(ApplicationRequest req) {
         ApiResponse<ApplicantDTO> applicant;
@@ -61,6 +63,8 @@ public class ApplicationService {
         applicationRepository.save(application);
 
         sendEmailToCompany(user.getData().getEmail(), applicant.getData().getFirstName(), job.getData().getTitle());
+
+        producerService.sendApplicationSubmittedEvent(applicant.getData().getFirstName().concat(" "+applicant.getData().getLastName()));
 
         return toResponse(application);
     }

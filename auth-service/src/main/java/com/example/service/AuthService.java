@@ -1,6 +1,7 @@
 package com.example.service;
 
 
+import com.example.Kafka.ProducerService;
 import com.example.dto.AuthResponse;
 import com.example.dto.LoginRequest;
 import com.example.dto.RegisterRequest;
@@ -15,11 +16,13 @@ public class AuthService {
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final ProducerService producerService;
 
-    public AuthService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder) {
+    public AuthService(UserRepository userRepository, JwtUtil jwtUtil, PasswordEncoder passwordEncoder, ProducerService producerService) {
         this.userRepository = userRepository;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.producerService = producerService;
     }
 
     public User register(RegisterRequest request) {
@@ -35,7 +38,12 @@ public class AuthService {
         user.setEnabled(true);
 
         userRepository.save(user);
-
+        if(user.getRole().equals("APPLICANT")) {
+            producerService.sendUserRegisteredEvent("user-registered","New user registered: ApplicantName is " + user.getUsername());
+        }
+        else{
+            producerService.sendUserRegisteredEvent("company-registered","New company registered by " + user.getUsername());
+        }
         return user;
     }
 
@@ -49,6 +57,8 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
         Long userId = user.getId();
+
+
         return new AuthResponse(userId,token);
     }
 }

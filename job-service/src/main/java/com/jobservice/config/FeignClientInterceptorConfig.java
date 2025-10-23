@@ -1,4 +1,4 @@
-package com.example.jobservice.config;
+package com.jobservice.config;
 
 import feign.RequestInterceptor;
 import feign.RequestTemplate;

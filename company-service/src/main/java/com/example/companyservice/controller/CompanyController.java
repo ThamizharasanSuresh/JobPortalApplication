@@ -7,6 +7,7 @@ import com.example.companyservice.repository.CompanyRepository;
 import com.example.companyservice.service.CompanyService;
 import com.sharepersistence.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,15 +20,17 @@ public class CompanyController {
 
     private final CompanyService companyService;
     private final CompanyRepository companyRepository;
+    private final CompanyModelAssembler assembler;
 
     @PostMapping("/{userId}")
-    public ResponseEntity<ApiResponse<CompanyResponse>> createCompany(
+    public ResponseEntity<ApiResponse<EntityModel<CompanyResponse>>> createCompany(
             @PathVariable Long userId,
             @RequestBody CompanyRequest req) {
 
         try {
             CompanyResponse response = companyService.createCompany(userId, req);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Company created successfully", response));
+            EntityModel<CompanyResponse> model = assembler.toModel(response);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Company created successfully", model));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new ApiResponse<>(false, e.getMessage(), null));

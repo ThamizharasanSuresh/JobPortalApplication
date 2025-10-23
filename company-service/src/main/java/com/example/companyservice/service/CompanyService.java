@@ -130,7 +130,6 @@ public class CompanyService {
                 System.out.println("Warning: Error fetching user for company " + c.getId() + ": " + e.getMessage());
             }
         }
-
         return new CompanyResponse(
                 c.getId(),
                 c.getName(),

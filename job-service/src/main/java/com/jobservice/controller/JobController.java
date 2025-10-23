@@ -1,10 +1,12 @@
 package com.jobservice.controller;
 
+import com.jobservice.Kafka.ProducerService;
 import com.jobservice.dto.JobRequest;
 import com.jobservice.dto.JobResponse;
 import com.jobservice.service.JobService;
 import com.sharepersistence.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +18,16 @@ import java.util.List;
 public class JobController {
 
     private final JobService jobService;
+    private final JobModelAssembler assembler;
+    private final ProducerService producerService;
 
     @PostMapping
-    public ResponseEntity<ApiResponse<JobResponse>> createJob(@RequestBody JobRequest req) {
+    public ResponseEntity<ApiResponse<EntityModel<JobResponse>>> createJob(@RequestBody JobRequest req) {
         try {
             JobResponse response = jobService.createJob(req.getCompanyId(), req);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Job created successfully", response));
+            EntityModel<JobResponse> model = assembler.toModel(response);
+            producerService.sendJobCreatedEvent(response.getTitle(),response.getCompanyName());
+            return ResponseEntity.ok(new ApiResponse<>(true, "Job created successfully", model));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }

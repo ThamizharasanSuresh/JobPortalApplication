@@ -5,6 +5,7 @@ import com.applicationservice.dto.ApplicationResponse;
 import com.applicationservice.service.ApplicationService;
 import com.sharepersistence.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -16,12 +17,14 @@ import java.util.List;
 public class ApplicationController {
 
     private final ApplicationService applicationService;
+    private final ApplicationModelAssembler assembler;
 
     @PostMapping
     public ResponseEntity<ApiResponse<?>> apply(@RequestBody ApplicationRequest req) {
         try {
             ApplicationResponse response = applicationService.apply(req);
-            return ResponseEntity.ok(new ApiResponse<>(true, "Application submitted successfully", response));
+            EntityModel<ApplicationResponse> entityModel = assembler.toModel(response);
+            return ResponseEntity.ok(new ApiResponse<>(true, "Application submitted successfully", entityModel));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(new ApiResponse<>(false, e.getMessage(), null));
         }

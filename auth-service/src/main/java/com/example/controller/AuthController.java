@@ -67,6 +67,7 @@ public class AuthController {
             @PathVariable Long id,
             @RequestBody User updatedUser) {
 
+
         return userRepository.findById(id)
                 .map(user -> {
                     if (updatedUser.getEmail() != null) {

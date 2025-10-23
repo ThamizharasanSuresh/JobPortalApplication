@@ -15,9 +15,9 @@ public class ApplicationModelAssembler implements RepresentationModelAssembler<A
     @Override
     public EntityModel<ApplicationResponse> toModel(ApplicationResponse applicationResponse) {
         return EntityModel.of(applicationResponse,
-                linkTo(methodOn(ApplicationController.class).getByApplicant(applicationResponse.getApplicantId())).withSelfRel(),
-                linkTo(methodOn(ApplicationController.class).getByJob(applicationResponse.getJobId())).withRel("job-applications"),
-                linkTo(methodOn(ApplicationController.class).apply(null)).withRel("apply")
+                linkTo(methodOn(ApplicationController.class).apply(null)).withSelfRel(),
+                linkTo(methodOn(ApplicationController.class).getByApplicant(applicationResponse.getApplicantId())).withRel("Get Application"),
+                linkTo(methodOn(ApplicationController.class).deleteApplication(applicationResponse.getId())).withRel("Delete Application")
         );
     }
 }
