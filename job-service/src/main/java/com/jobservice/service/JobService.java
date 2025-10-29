@@ -8,15 +8,26 @@ import com.jobservice.repository.JobRepository;
 import com.sharepersistence.entity.Company;
 import com.sharepersistence.entity.Job;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class JobService {
+
+    @PersistenceContext
+    private EntityManager em;
 
     private final JobRepository jobRepository;
     private final CompanyFeignClient companyFeignClient;
@@ -82,13 +93,31 @@ public class JobService {
                 .collect(Collectors.toList());
     }
 
+
+    // Criteria Builder
     public List<JobResponse> searchJobs(String keyword) {
-        return jobRepository.searchJobsIgnoreCase(keyword == null ? "" : keyword)
-                .stream()
+
+        String key = (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT));
+        String pattern = "%" + key + "%";
+
+        Specification<Job> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (!key.isEmpty()) {
+                predicates.add(cb.like(cb.lower(root.get("title")), pattern));
+                predicates.add(cb.like(cb.lower(root.get("skills")), pattern));
+                predicates.add(cb.like(cb.lower(root.get("location")), pattern));
+            }
+
+            return cb.or(predicates.toArray(new Predicate[0]));
+        };
+
+        List<Job> results = jobRepository.findAll(spec);
+
+        return results.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
-
     public List<JobResponse> filterByEmploymentType(String employmentType) {
         return jobRepository.findByEmploymentTypeIgnoreCase(employmentType == null ? "" : employmentType)
                 .stream()
