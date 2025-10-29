@@ -35,7 +35,7 @@ public class ApplicantController {
         }
     }
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<ApiResponse<?>> getAllApplicants() {
         List<ApplicantResponse> applicants = applicantService.getAllApplicants();
         return ResponseEntity.ok(new ApiResponse<>(true, "All applicants fetched successfully", applicants));
@@ -71,7 +71,10 @@ public class ApplicantController {
         }
     }
 
-    @PostMapping("/{id}/resume/upload")
+    @PostMapping(
+            path = "/{id}/resume/upload",
+            consumes = { "multipart/form-data" }
+    )
     public ResponseEntity<ApiResponse<?>> uploadResume(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
         try {
             ResumeResponse response = applicantService.uploadOrReplaceResume(id, file);

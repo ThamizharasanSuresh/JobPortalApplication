@@ -24,8 +24,11 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/applications/**").authenticated()
-                        .anyRequest().permitAll()
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/api/applications/applicant/**").hasAuthority("APPLICANT")
+                        .requestMatchers("/api/applications/job/**").hasAuthority("COMPANY")
+                        .requestMatchers("/api/jobs/**", "/api/applications/**").hasAnyAuthority("APPLICANT", "COMPANY")
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 

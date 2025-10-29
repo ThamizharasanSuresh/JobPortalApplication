@@ -92,20 +92,29 @@ public class ApplicantService {
             try {
                 Files.deleteIfExists(Paths.get(r.getFilePath()));
                 resumeRepository.delete(r);
-            } catch (IOException ignored) {}
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
         }
 
-        String folder = "uploads/";
-        Path path = Paths.get(folder + file.getOriginalFilename());
-        Files.createDirectories(path.getParent());
-        Files.write(path, file.getBytes());
+
+        String folder = "uploads/resumes/";
+        Path directory = Paths.get(folder);
+        Files.createDirectories(directory);
+
+
+        String uniqueFileName = System.currentTimeMillis() + "_" + file.getOriginalFilename();
+        Path filePath = directory.resolve(uniqueFileName);
+        Files.write(filePath, file.getBytes());
+
 
         Resume resume = Resume.builder()
                 .fileName(file.getOriginalFilename())
                 .fileType(file.getContentType())
-                .filePath(path.toString())
+                .filePath(filePath.toString())
                 .applicant(applicant)
                 .build();
+
 
         resume = resumeParserService.parseResume(resume);
         resumeRepository.save(resume);
@@ -121,6 +130,7 @@ public class ApplicantService {
                 applicant.getId()
         );
     }
+
     public ResumeResponse updateResumeDetails(Long applicantId, ResumeUpdateRequest req) {
         Resume resume = resumeRepository.findFirstByApplicantId(applicantId)
                 .orElseThrow(() -> new RuntimeException("Resume not found for applicant ID: " + applicantId));

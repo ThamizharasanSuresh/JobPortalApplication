@@ -1,23 +1,17 @@
 package com.example.companyservice.service;
 
-
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-
-
 import java.util.Date;
 
 @Component
-
 public class JwtUtil {
 
     @Value("${jwt.secret}")
     private String secret;
+
     private final long EXPIRATION = 86400000; // 1 day
 
     public String generateToken(String username, String role) {
@@ -43,12 +37,18 @@ public class JwtUtil {
     }
 
     public String extractUsername(String token) {
+        return getAllClaims(token).getSubject();
+    }
+
+    public String extractRole(String token) {
+        return getAllClaims(token).get("role", String.class);
+    }
+
+    private Claims getAllClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .getSubject();
+                .getBody();
     }
 }
-
